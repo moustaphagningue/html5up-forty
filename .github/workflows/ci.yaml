@@ -1,4 +1,4 @@
-name: CI-CD Docker Pipeline
+name: Pipeline Docker CI/CD
 
 on:
   push:
@@ -8,13 +8,10 @@ on:
 env:
   IMAGE_NAME: ci-html
   IMAGE_TAG: 1.0.1
-  DOCKER_REGISTRY: ${{ secrets.DOCKERHUB_USERNAME }}
+  DOCKER_REGISTRY: ${{ secrets.DOCKER_USERNAME }}
 
 jobs:
 
-  # ===============================
-  # JOB 1 - CI : BUILD + PUSH + SCAN
-  # ===============================
   ci:
     runs-on: ubuntu-latest
 
@@ -30,8 +27,8 @@ jobs:
 
       - name: Login to Docker Hub
         run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | \
-          docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+          echo "${{ secrets.DOCKER_PASSWORD }}" | \
+          docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
       - name: Build Docker image
         run: |
@@ -48,16 +45,13 @@ jobs:
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@v0.35.0
         with:
-          image-ref: ${{ secrets.DOCKERHUB_USERNAME }}/ci-html:1.0.1
+          image-ref: ${{ secrets.DOCKER_USERNAME }}/ci-html:1.0.1
           format: table
           severity: CRITICAL,HIGH
           exit-code: 1
           vuln-type: os,library
           ignore-unfixed: true
 
-  # ===============================
-  # JOB 2 - CD : DEPLOY
-  # ===============================
   deploy:
     needs: ci
     runs-on: ubuntu-latest
